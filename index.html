@@ -125,6 +125,7 @@
     }
 
     .photo-frame.has-photo {
+      background: #fff;
       cursor: grab;
       touch-action: none;
     }
@@ -134,11 +135,14 @@
     }
 
     .photo-frame img {
-      width: 100%;
-      height: 100%;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: auto;
+      height: auto;
       display: block;
-      object-fit: cover;
-      object-position: center;
+      max-width: none;
+      max-height: none;
     }
 
     .photo-frame img[hidden] {
@@ -161,6 +165,47 @@
 
     .photo-frame.has-photo .photo-picker {
       pointer-events: none;
+    }
+
+    .photo-tools {
+      position: absolute;
+      right: 4.9%;
+      top: 34.35%;
+      z-index: 8;
+      width: clamp(30px, 4.6cqw, 42px);
+      height: clamp(96px, 18cqw, 168px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 8px 5px;
+      border: 1px solid rgba(13, 84, 196, 0.22);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: 0 8px 22px rgba(13, 84, 196, 0.16);
+      backdrop-filter: blur(8px);
+    }
+
+    .photo-frame.has-photo + .photo-tools {
+      display: flex;
+    }
+
+    .zoom-mark {
+      height: 16px;
+      color: #0d54c4;
+      font-size: clamp(13px, 2.1cqw, 17px);
+      font-weight: 900;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .zoom-slider {
+      width: clamp(76px, 13cqw, 104px);
+      accent-color: #0d54c4;
+      cursor: pointer;
+      transform: rotate(-90deg);
+      touch-action: manipulation;
     }
 
     .sr-only {
@@ -261,6 +306,106 @@
       transform: none;
     }
 
+    .save-modal[hidden] {
+      display: none;
+    }
+
+    .save-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .save-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(9, 22, 46, 0.52);
+    }
+
+    .save-panel {
+      position: relative;
+      width: min(520px, 100%);
+      max-height: min(86dvh, 820px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 18px;
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 22px 55px rgba(9, 22, 46, 0.28);
+    }
+
+    .save-panel h2 {
+      margin: 0;
+      color: #0b2d73;
+      font-size: 20px;
+      line-height: 1.25;
+    }
+
+    .save-panel p {
+      margin: 0;
+      color: #26324d;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .save-preview {
+      width: 100%;
+      max-height: 56dvh;
+      object-fit: contain;
+      border: 1px solid rgba(13, 84, 196, 0.18);
+      border-radius: 8px;
+      background: #f8fbff;
+    }
+
+    .save-modal-close {
+      position: absolute;
+      right: 12px;
+      top: 10px;
+      width: 34px;
+      height: 34px;
+      border: 0;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #0b2d73;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .save-modal-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .save-action {
+      flex: 1 1 150px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 999px;
+      padding: 0 18px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      text-decoration: none;
+      color: #fff;
+      background: #0b6edc;
+      cursor: pointer;
+    }
+
+    .save-action.secondary {
+      color: #0b2d73;
+      background: #eef4ff;
+    }
+
     @media (max-width: 520px) {
       .page {
         padding-left: 6px;
@@ -283,6 +428,12 @@
       .ink-memo {
         padding-left: 0.75cqw;
         padding-right: 0.75cqw;
+      }
+
+      .photo-tools {
+        right: 6.2%;
+        top: 34.8%;
+        padding: 6px 4px;
       }
     }
   </style>
@@ -328,6 +479,11 @@
         <label class="photo-picker" for="photoUpload" aria-label="스마트폰으로 찍은 금성과 목성 사진 업로드"></label>
         <input class="sr-only" id="photoUpload" type="file" accept="image/*" />
       </div>
+      <div class="photo-tools" data-html2canvas-ignore="true">
+        <span class="zoom-mark">+</span>
+        <input class="zoom-slider" id="photoZoom" type="range" min="1" max="3" step="0.01" value="1" aria-label="사진 확대 비율" />
+        <span class="zoom-mark">-</span>
+      </div>
 
       <label class="sr-only" for="skyColor">하늘은 어떤 색이었나요?</label>
       <textarea
@@ -362,6 +518,20 @@
     </div>
   </main>
 
+  <div class="save-modal" id="saveModal" hidden>
+    <div class="save-modal-backdrop" data-close-save-modal></div>
+    <section class="save-panel" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
+      <button class="save-modal-close" type="button" data-close-save-modal aria-label="닫기">×</button>
+      <h2 id="saveModalTitle">이미지 저장</h2>
+      <p>카카오톡 브라우저에서는 자동 다운로드가 안 될 수 있어요. 아래 이미지를 길게 눌러 저장하거나 공유하기를 눌러 주세요.</p>
+      <img class="save-preview" id="savePreview" alt="저장할 관측 기록 이미지" />
+      <div class="save-modal-actions">
+        <button class="save-action" id="shareImageButton" type="button">공유하기</button>
+        <a class="save-action secondary" id="openImageLink" href="#" target="_blank" rel="noopener">이미지 열기</a>
+      </div>
+    </section>
+  </div>
+
   <script>
     const eventForm = document.getElementById("eventForm");
     const obsDate = document.getElementById("obsDate");
@@ -373,17 +543,28 @@
     const photoUpload = document.getElementById("photoUpload");
     const photoFrame = document.getElementById("photoFrame");
     const previewImage = document.getElementById("previewImage");
+    const photoZoom = document.getElementById("photoZoom");
     const saveButton = document.getElementById("saveButton");
+    const saveModal = document.getElementById("saveModal");
+    const savePreview = document.getElementById("savePreview");
+    const shareImageButton = document.getElementById("shareImageButton");
+    const openImageLink = document.getElementById("openImageLink");
+    const saveFilename = "금성목성_관측기록.png";
+    let latestSaveUrl = "";
+    let latestSaveFile = null;
     const photoPosition = {
-      x: 50,
-      y: 50
+      x: 0,
+      y: 0
+    };
+    const photoScale = {
+      zoom: 1
     };
     const dragState = {
       active: false,
       startX: 0,
       startY: 0,
-      startPhotoX: 50,
-      startPhotoY: 50,
+      startPhotoX: 0,
+      startPhotoY: 0,
       overflowX: 0,
       overflowY: 0
     };
@@ -401,6 +582,10 @@
       });
     }
 
+    function isKakaoTalkBrowser() {
+      return /KAKAOTALK/i.test(navigator.userAgent);
+    }
+
     function triggerDownload(url, filename, revokeUrl) {
       const link = document.createElement("a");
       link.href = url;
@@ -414,14 +599,20 @@
       }
     }
 
-    function downloadCanvas(canvas) {
-      const filename = "금성목성_관측기록.png";
-
+    function canvasToBlob(canvas) {
       return new Promise((resolve, reject) => {
         const useDataUrl = () => {
           try {
-            triggerDownload(canvas.toDataURL("image/png"), filename, false);
-            resolve();
+            const dataUrl = canvas.toDataURL("image/png");
+            const commaIndex = dataUrl.indexOf(",");
+            const binary = atob(dataUrl.slice(commaIndex + 1));
+            const bytes = new Uint8Array(binary.length);
+
+            for (let index = 0; index < binary.length; index += 1) {
+              bytes[index] = binary.charCodeAt(index);
+            }
+
+            resolve(new Blob([bytes], { type: "image/png" }));
           } catch (error) {
             reject(error);
           }
@@ -439,14 +630,60 @@
               return;
             }
 
-            const url = URL.createObjectURL(blob);
-            triggerDownload(url, filename, true);
-            resolve();
+            resolve(blob);
           }, "image/png");
         } catch (error) {
           reject(error);
         }
       });
+    }
+
+    function makeSaveFile(blob) {
+      try {
+        return new File([blob], saveFilename, { type: "image/png" });
+      } catch (error) {
+        blob.name = saveFilename;
+        return blob;
+      }
+    }
+
+    function canShareSaveFile(file) {
+      try {
+        return Boolean(
+          navigator.canShare &&
+          typeof File !== "undefined" &&
+          file instanceof File &&
+          navigator.canShare({ files: [file] })
+        );
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function showSaveModal(blob) {
+      if (latestSaveUrl) {
+        URL.revokeObjectURL(latestSaveUrl);
+      }
+
+      latestSaveUrl = URL.createObjectURL(blob);
+      latestSaveFile = makeSaveFile(blob);
+      savePreview.src = latestSaveUrl;
+      openImageLink.href = latestSaveUrl;
+
+      shareImageButton.hidden = !canShareSaveFile(latestSaveFile);
+      saveModal.hidden = false;
+    }
+
+    async function downloadCanvas(canvas) {
+      const blob = await canvasToBlob(canvas);
+
+      if (isKakaoTalkBrowser()) {
+        showSaveModal(blob);
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      triggerDownload(url, saveFilename, true);
     }
 
     function loadImage(src) {
@@ -468,38 +705,67 @@
       return Math.min(max, Math.max(min, value));
     }
 
-    function getPhotoOverflow() {
-      const frame = photoFrame.getBoundingClientRect();
-      const sourceWidth = previewImage.naturalWidth || 1;
-      const sourceHeight = previewImage.naturalHeight || 1;
-      const scale = Math.max(frame.width / sourceWidth, frame.height / sourceHeight);
+    function getPhotoLayout(frameWidth, frameHeight, sourceWidth, sourceHeight, zoom, panX, panY) {
+      const containScale = Math.min(frameWidth / sourceWidth, frameHeight / sourceHeight);
+      const drawWidth = sourceWidth * containScale * zoom;
+      const drawHeight = sourceHeight * containScale * zoom;
+      const maxOffsetX = Math.max(0, (drawWidth - frameWidth) / 2);
+      const maxOffsetY = Math.max(0, (drawHeight - frameHeight) / 2);
+      const offsetX = clampNumber(panX, -1, 1) * maxOffsetX;
+      const offsetY = clampNumber(panY, -1, 1) * maxOffsetY;
 
       return {
-        x: Math.max(0, sourceWidth * scale - frame.width),
-        y: Math.max(0, sourceHeight * scale - frame.height)
+        drawWidth,
+        drawHeight,
+        left: (frameWidth - drawWidth) / 2 + offsetX,
+        top: (frameHeight - drawHeight) / 2 + offsetY,
+        maxOffsetX,
+        maxOffsetY
       };
     }
 
-    function applyPhotoPosition() {
-      previewImage.style.objectPosition = `${photoPosition.x}% ${photoPosition.y}%`;
+    function getCurrentPhotoLayout() {
+      const frame = photoFrame.getBoundingClientRect();
+      return getPhotoLayout(
+        frame.width,
+        frame.height,
+        previewImage.naturalWidth || 1,
+        previewImage.naturalHeight || 1,
+        photoScale.zoom,
+        photoPosition.x,
+        photoPosition.y
+      );
     }
 
-    function resetPhotoPosition() {
-      photoPosition.x = 50;
-      photoPosition.y = 50;
-      applyPhotoPosition();
+    function applyPhotoView() {
+      if (previewImage.hidden || !previewImage.src) {
+        return;
+      }
+
+      const layout = getCurrentPhotoLayout();
+      previewImage.style.width = `${layout.drawWidth}px`;
+      previewImage.style.height = `${layout.drawHeight}px`;
+      previewImage.style.left = `${layout.left}px`;
+      previewImage.style.top = `${layout.top}px`;
+
+      if (photoZoom) {
+        photoZoom.value = String(photoScale.zoom);
+      }
     }
 
-    function drawCoverImage(ctx, image, x, y, width, height, positionX = 50, positionY = 50) {
+    function resetPhotoView() {
+      photoPosition.x = 0;
+      photoPosition.y = 0;
+      photoScale.zoom = 1;
+      applyPhotoView();
+    }
+
+    function drawPhotoImage(ctx, image, x, y, width, height) {
       const sourceWidth = image.naturalWidth || image.width;
       const sourceHeight = image.naturalHeight || image.height;
-      const scale = Math.max(width / sourceWidth, height / sourceHeight);
-      const cropWidth = width / scale;
-      const cropHeight = height / scale;
-      const cropX = Math.max(0, (sourceWidth - cropWidth) * (positionX / 100));
-      const cropY = Math.max(0, (sourceHeight - cropHeight) * (positionY / 100));
+      const layout = getPhotoLayout(width, height, sourceWidth, sourceHeight, photoScale.zoom, photoPosition.x, photoPosition.y);
 
-      ctx.drawImage(image, cropX, cropY, cropWidth, cropHeight, x, y, width, height);
+      ctx.drawImage(image, x + layout.left, y + layout.top, layout.drawWidth, layout.drawHeight);
     }
 
     function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, maxHeight) {
@@ -556,7 +822,9 @@
         }
 
         ctx.clip();
-        drawCoverImage(ctx, photo, 44, 434, 1035, 426, photoPosition.x, photoPosition.y);
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(44, 434, 1035, 426);
+        drawPhotoImage(ctx, photo, 44, 434, 1035, 426);
         ctx.restore();
       }
 
@@ -585,10 +853,12 @@
 
       const reader = new FileReader();
       reader.addEventListener("load", () => {
+        previewImage.onload = () => {
+          previewImage.hidden = false;
+          photoFrame.classList.add("has-photo");
+          resetPhotoView();
+        };
         previewImage.src = reader.result;
-        previewImage.hidden = false;
-        photoFrame.classList.add("has-photo");
-        resetPhotoPosition();
       });
       reader.readAsDataURL(file);
     });
@@ -598,14 +868,14 @@
         return;
       }
 
-      const overflow = getPhotoOverflow();
+      const layout = getCurrentPhotoLayout();
       dragState.active = true;
       dragState.startX = event.clientX;
       dragState.startY = event.clientY;
       dragState.startPhotoX = photoPosition.x;
       dragState.startPhotoY = photoPosition.y;
-      dragState.overflowX = overflow.x;
-      dragState.overflowY = overflow.y;
+      dragState.overflowX = layout.maxOffsetX;
+      dragState.overflowY = layout.maxOffsetY;
       photoFrame.classList.add("is-dragging");
       photoFrame.setPointerCapture(event.pointerId);
       event.preventDefault();
@@ -620,14 +890,14 @@
       const deltaY = event.clientY - dragState.startY;
 
       if (dragState.overflowX > 0) {
-        photoPosition.x = clampNumber(dragState.startPhotoX - (deltaX / dragState.overflowX) * 100, 0, 100);
+        photoPosition.x = clampNumber(dragState.startPhotoX + deltaX / dragState.overflowX, -1, 1);
       }
 
       if (dragState.overflowY > 0) {
-        photoPosition.y = clampNumber(dragState.startPhotoY - (deltaY / dragState.overflowY) * 100, 0, 100);
+        photoPosition.y = clampNumber(dragState.startPhotoY + deltaY / dragState.overflowY, -1, 1);
       }
 
-      applyPhotoPosition();
+      applyPhotoView();
       event.preventDefault();
     });
 
@@ -646,6 +916,49 @@
 
     photoFrame.addEventListener("pointerup", stopPhotoDrag);
     photoFrame.addEventListener("pointercancel", stopPhotoDrag);
+
+    if (photoZoom) {
+      photoZoom.addEventListener("pointerdown", (event) => {
+        event.stopPropagation();
+      });
+
+      photoZoom.addEventListener("input", () => {
+        photoScale.zoom = Number(photoZoom.value);
+
+        if (photoScale.zoom <= 1.01) {
+          photoPosition.x = 0;
+          photoPosition.y = 0;
+        }
+
+        applyPhotoView();
+      });
+    }
+
+    window.addEventListener("resize", applyPhotoView);
+
+    document.querySelectorAll("[data-close-save-modal]").forEach((button) => {
+      button.addEventListener("click", () => {
+        saveModal.hidden = true;
+      });
+    });
+
+    shareImageButton.addEventListener("click", async () => {
+      if (!latestSaveFile || !canShareSaveFile(latestSaveFile) || !navigator.share) {
+        alert("이 브라우저에서는 공유 기능을 사용할 수 없습니다. 이미지를 길게 눌러 저장해 주세요.");
+        return;
+      }
+
+      try {
+        await navigator.share({
+          files: [latestSaveFile],
+          title: "금성과 목성 관측 기록"
+        });
+      } catch (error) {
+        if (error && error.name !== "AbortError") {
+          alert("공유를 실행하지 못했습니다. 이미지를 길게 눌러 저장해 주세요.");
+        }
+      }
+    });
 
     saveButton.addEventListener("click", async () => {
       saveButton.disabled = true;
@@ -677,7 +990,8 @@
             imageTimeout: 0,
             logging: false,
             scale: Math.min(2, window.devicePixelRatio || 1),
-            useCORS: true
+            useCORS: true,
+            ignoreElements: (element) => element.hasAttribute("data-html2canvas-ignore")
           });
 
           await downloadCanvas(canvas);
