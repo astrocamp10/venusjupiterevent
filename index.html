@@ -364,6 +364,16 @@
       line-height: 1.55;
     }
 
+    .save-warning {
+      padding: 12px 14px;
+      border: 1px solid rgba(248, 164, 40, 0.55);
+      border-radius: 10px;
+      background: #fff7df;
+      color: #5f3c00;
+      font-weight: 800;
+      text-align: center;
+    }
+
     .save-preview {
       width: 100%;
       max-height: 56dvh;
@@ -388,34 +398,6 @@
       cursor: pointer;
     }
 
-    .save-modal-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .save-action {
-      flex: 1 1 150px;
-      min-height: 44px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: 0;
-      border-radius: 999px;
-      padding: 0 18px;
-      font-family: inherit;
-      font-size: 15px;
-      font-weight: 800;
-      text-decoration: none;
-      color: #fff;
-      background: #0b6edc;
-      cursor: pointer;
-    }
-
-    .save-action.secondary {
-      color: #0b2d73;
-      background: #eef4ff;
-    }
 
 
     @media (max-width: 520px) {
@@ -536,11 +518,8 @@
     <section class="save-panel" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
       <button class="save-modal-close" type="button" data-close-save-modal aria-label="닫기">×</button>
       <h2 id="saveModalTitle">이미지 저장</h2>
-      <p>카카오톡 브라우저 정책상 자동 다운로드가 제한되어, 이미지를 길게 눌러 저장하기만 가능합니다.</p>
+      <p class="save-warning">중요: 카카오톡 브라우저 정책상 이미지를 길게 눌러서 저장해 주세요.</p>
       <img class="save-preview" id="savePreview" alt="저장할 관측 기록 이미지" />
-      <div class="save-modal-actions">
-        <button class="save-action" id="kakaoSaveButton" type="button">이미지 저장하기</button>
-      </div>
     </section>
   </div>
 
@@ -559,7 +538,6 @@
     const saveButton = document.getElementById("saveButton");
     const saveModal = document.getElementById("saveModal");
     const savePreview = document.getElementById("savePreview");
-    const kakaoSaveButton = document.getElementById("kakaoSaveButton");
     const saveFilename = "금성목성_관측기록.png";
     let latestSaveUrl = "";
     let latestSaveDataUrl = "";
@@ -944,15 +922,6 @@
       button.addEventListener("click", () => {
         saveModal.hidden = true;
       });
-    });
-
-    kakaoSaveButton.addEventListener("click", () => {
-      if (!latestSaveDataUrl) {
-        return;
-      }
-
-      savePreview.src = latestSaveDataUrl;
-      savePreview.scrollIntoView({ behavior: "smooth", block: "center" });
     });
 
     saveButton.addEventListener("click", async () => {
