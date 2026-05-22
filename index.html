@@ -406,69 +406,6 @@
       background: #eef4ff;
     }
 
-    .image-only-view[hidden] {
-      display: none;
-    }
-
-    .image-only-view {
-      position: fixed;
-      inset: 0;
-      z-index: 70;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 16px;
-      background: #f5f8ff;
-      overflow: auto;
-    }
-
-    .image-only-bar {
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      width: min(720px, 100%);
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.94);
-      box-shadow: 0 8px 22px rgba(9, 22, 46, 0.12);
-    }
-
-    .image-only-bar p {
-      margin: 0;
-      color: #26324d;
-      font-size: 14px;
-      line-height: 1.4;
-    }
-
-    .image-only-close {
-      flex: 0 0 auto;
-      min-height: 38px;
-      border: 0;
-      border-radius: 999px;
-      padding: 0 16px;
-      color: #fff;
-      background: #0b6edc;
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .image-only-preview {
-      width: min(720px, 100%);
-      height: auto;
-      display: block;
-      border-radius: 8px;
-      background: #fff;
-      box-shadow: 0 12px 34px rgba(9, 22, 46, 0.18);
-      -webkit-touch-callout: default;
-    }
 
     @media (max-width: 520px) {
       .page {
@@ -587,23 +524,12 @@
     <section class="save-panel" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
       <button class="save-modal-close" type="button" data-close-save-modal aria-label="닫기">×</button>
       <h2 id="saveModalTitle">이미지 저장</h2>
-      <p>카카오톡 브라우저에서는 자동 다운로드가 막힐 수 있어요. 이미지 복사, 이미지만 보기, 공유하기 중 가능한 방법을 사용해 주세요.</p>
+      <p>카카오톡 브라우저 정책상 자동 다운로드가 제한되어, 이미지를 길게 눌러 저장하기만 가능합니다.</p>
       <img class="save-preview" id="savePreview" alt="저장할 관측 기록 이미지" />
       <div class="save-modal-actions">
-        <button class="save-action" id="shareImageButton" type="button">공유하기</button>
-        <button class="save-action secondary" id="copyImageButton" type="button">이미지 복사</button>
-        <button class="save-action secondary" id="viewImageOnlyButton" type="button">이미지만 보기</button>
-        <a class="save-action secondary" id="openImageLink" href="#" target="_blank" rel="noopener">이미지 열기</a>
+        <button class="save-action" id="kakaoSaveButton" type="button">이미지 저장하기</button>
       </div>
     </section>
-  </div>
-
-  <div class="image-only-view" id="imageOnlyView" hidden>
-    <div class="image-only-bar">
-      <p>이미지를 길게 눌러 저장해 주세요.</p>
-      <button class="image-only-close" id="closeImageOnly" type="button">돌아가기</button>
-    </div>
-    <img class="image-only-preview" id="imageOnlyPreview" alt="저장할 관측 기록 이미지 크게 보기" />
   </div>
 
   <script>
@@ -621,13 +547,7 @@
     const saveButton = document.getElementById("saveButton");
     const saveModal = document.getElementById("saveModal");
     const savePreview = document.getElementById("savePreview");
-    const shareImageButton = document.getElementById("shareImageButton");
-    const copyImageButton = document.getElementById("copyImageButton");
-    const viewImageOnlyButton = document.getElementById("viewImageOnlyButton");
-    const openImageLink = document.getElementById("openImageLink");
-    const imageOnlyView = document.getElementById("imageOnlyView");
-    const imageOnlyPreview = document.getElementById("imageOnlyPreview");
-    const closeImageOnly = document.getElementById("closeImageOnly");
+    const kakaoSaveButton = document.getElementById("kakaoSaveButton");
     const saveFilename = "금성목성_관측기록.png";
     let latestSaveUrl = "";
     let latestSaveDataUrl = "";
@@ -732,19 +652,6 @@
       }
     }
 
-    function canShareSaveFile(file) {
-      try {
-        return Boolean(
-          navigator.canShare &&
-          typeof File !== "undefined" &&
-          file instanceof File &&
-          navigator.canShare({ files: [file] })
-        );
-      } catch (error) {
-        return false;
-      }
-    }
-
     function showSaveModal(blob, dataUrl) {
       if (latestSaveUrl) {
         URL.revokeObjectURL(latestSaveUrl);
@@ -755,11 +662,6 @@
       latestSaveBlob = blob;
       latestSaveFile = makeSaveFile(blob);
       savePreview.src = latestSaveDataUrl;
-      imageOnlyPreview.src = latestSaveDataUrl;
-      openImageLink.href = latestSaveDataUrl;
-
-      shareImageButton.hidden = !canShareSaveFile(latestSaveFile);
-      copyImageButton.hidden = !Boolean(navigator.clipboard && window.ClipboardItem);
       saveModal.hidden = false;
     }
 
@@ -1032,56 +934,13 @@
       });
     });
 
-    shareImageButton.addEventListener("click", async () => {
-      if (!latestSaveFile || !canShareSaveFile(latestSaveFile) || !navigator.share) {
-        alert("이 브라우저에서는 공유 기능을 사용할 수 없습니다. 이미지를 길게 눌러 저장해 주세요.");
-        return;
-      }
-
-      try {
-        await navigator.share({
-          files: [latestSaveFile],
-          title: "금성과 목성 관측 기록"
-        });
-      } catch (error) {
-        if (error && error.name !== "AbortError") {
-          alert("공유를 실행하지 못했습니다. 이미지를 길게 눌러 저장해 주세요.");
-        }
-      }
-    });
-
-    copyImageButton.addEventListener("click", async () => {
-      if (!latestSaveBlob || !navigator.clipboard || !window.ClipboardItem) {
-        alert("이 브라우저에서는 이미지 복사를 사용할 수 없습니다.");
-        return;
-      }
-
-      try {
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            "image/png": latestSaveBlob
-          })
-        ]);
-        alert("이미지가 복사되었습니다. 사진 앱이나 대화방에 붙여넣어 보세요.");
-      } catch (error) {
-        alert("이미지 복사가 차단되었습니다. 이미지만 보기에서 이미지를 길게 눌러 저장해 주세요.");
-      }
-    });
-
-    viewImageOnlyButton.addEventListener("click", () => {
+    kakaoSaveButton.addEventListener("click", () => {
       if (!latestSaveDataUrl) {
         return;
       }
 
-      imageOnlyPreview.src = latestSaveDataUrl;
-      imageOnlyView.hidden = false;
-      saveModal.hidden = true;
-      window.scrollTo({ top: 0, behavior: "instant" });
-    });
-
-    closeImageOnly.addEventListener("click", () => {
-      imageOnlyView.hidden = true;
-      saveModal.hidden = false;
+      savePreview.src = latestSaveDataUrl;
+      savePreview.scrollIntoView({ behavior: "smooth", block: "center" });
     });
 
     saveButton.addEventListener("click", async () => {
