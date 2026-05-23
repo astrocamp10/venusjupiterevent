@@ -567,6 +567,14 @@
       outline-offset: 3px;
     }
 
+    .info-modal.is-start-mode .save-modal-close {
+      display: none;
+    }
+
+    .info-modal:not(.is-start-mode) .info-start-button {
+      display: none;
+    }
+
 
 
     @media (max-width: 520px) {
@@ -691,7 +699,7 @@
   </main>
 
   <div class="save-modal info-modal" id="infoModal" hidden>
-    <div class="save-modal-backdrop" data-close-info-modal></div>
+    <div class="save-modal-backdrop" data-close-info-backdrop></div>
     <section class="save-panel info-panel" role="dialog" aria-modal="true" aria-label="사용 안내">
       <button class="save-modal-close" type="button" data-close-info-modal aria-label="닫기">×</button>
 
@@ -842,6 +850,10 @@
     }
 
     function getModalHash(modalName) {
+      if (modalName === "start") {
+        return "start-guide";
+      }
+
       return modalName === "save" ? "save-image" : "guide";
     }
 
@@ -869,14 +881,14 @@
       gestureRefreshedModal = "";
 
       try {
-        if (window.location.hash !== `#${modalHash}`) {
-          window.location.hash = modalHash;
-        } else {
-          history.replaceState({ venusJupiterModal: modalName }, "", getHistoryUrl(modalName));
-        }
+        history.pushState({ venusJupiterModal: modalName }, "", getHistoryUrl(modalName));
       } catch (error) {
         try {
-          history.pushState({ venusJupiterModal: modalName }, "", getHistoryUrl(modalName));
+          if (window.location.hash !== `#${modalHash}`) {
+            window.location.hash = modalHash;
+          } else {
+            history.replaceState({ venusJupiterModal: modalName }, "", getHistoryUrl(modalName));
+          }
         } catch (historyError) {
           console.warn("Modal history setup failed.", historyError);
           activeHistoryModal = null;
@@ -884,8 +896,12 @@
       }
     }
 
+    function getCurrentInfoModalName() {
+      return infoModal.dataset.mode === "start" ? "start" : "info";
+    }
+
     function refreshModalHistoryFromGesture() {
-      const modalName = !saveModal.hidden ? "save" : (!infoModal.hidden ? "info" : "");
+      const modalName = !saveModal.hidden ? "save" : (!infoModal.hidden ? getCurrentInfoModalName() : "");
 
       if (!modalName || gestureRefreshedModal === modalName) {
         return;
@@ -902,11 +918,14 @@
     }
 
     function openInfoModal(options = {}) {
+      const mode = options.mode === "start" ? "start" : "help";
+      infoModal.dataset.mode = mode;
+      infoModal.classList.toggle("is-start-mode", mode === "start");
       infoModal.hidden = false;
       rememberInfoModalSeen();
 
       if (!options.fromHistory) {
-        pushModalHistory("info");
+        pushModalHistory(mode === "start" ? "start" : "info");
       }
     }
 
@@ -920,7 +939,7 @@
         return;
       }
 
-      if (wasOpen && activeHistoryModal === "info") {
+      if (wasOpen && (activeHistoryModal === "info" || activeHistoryModal === "start")) {
         activeHistoryModal = null;
         gestureRefreshedModal = "";
         history.back();
@@ -949,6 +968,26 @@
         activeHistoryModal = null;
         gestureRefreshedModal = "";
         history.back();
+      }
+    }
+
+    function scheduleInitialInfoModal() {
+      if (hasSeenInfoModal()) {
+        return;
+      }
+
+      const openInitialInfoModal = () => {
+        window.setTimeout(() => {
+          if (!hasSeenInfoModal()) {
+            openInfoModal({ mode: "start" });
+          }
+        }, 180);
+      };
+
+      if (document.readyState === "complete") {
+        openInitialInfoModal();
+      } else {
+        window.addEventListener("load", openInitialInfoModal, { once: true });
       }
     }
 
@@ -1453,7 +1492,15 @@
       button.addEventListener("click", closeInfoModal);
     });
 
-    helpButton.addEventListener("click", openInfoModal);
+    document.querySelectorAll("[data-close-info-backdrop]").forEach((backdrop) => {
+      backdrop.addEventListener("click", () => {
+        if (getCurrentInfoModalName() !== "start") {
+          closeInfoModal();
+        }
+      });
+    });
+
+    helpButton.addEventListener("click", () => openInfoModal({ mode: "help" }));
 
     ["pointerdown", "touchstart", "mousedown"].forEach((eventName) => {
       document.addEventListener(eventName, refreshModalHistoryFromGesture, { capture: true });
@@ -1474,7 +1521,7 @@
         return;
       }
 
-      if (!infoModal.hidden) {
+      if (!infoModal.hidden && getCurrentInfoModalName() !== "start") {
         closeInfoModal();
       }
 
@@ -1484,6 +1531,10 @@
     });
 
     function getModalNameFromHash() {
+      if (window.location.hash === "#start-guide") {
+        return "start";
+      }
+
       if (window.location.hash === "#guide") {
         return "info";
       }
@@ -1498,9 +1549,9 @@
     function handleHistoryModalChange(event) {
       const modalName = getModalNameFromHash() || (event && event.state ? event.state.venusJupiterModal : "");
 
-      if (modalName === "info" && infoModal.hidden) {
-        activeHistoryModal = "info";
-        openInfoModal({ fromHistory: true });
+      if ((modalName === "info" || modalName === "start") && infoModal.hidden) {
+        activeHistoryModal = modalName;
+        openInfoModal({ fromHistory: true, mode: modalName === "start" ? "start" : "help" });
         return;
       }
 
@@ -1534,9 +1585,7 @@
 
     initializeHistoryGuard();
 
-    if (!hasSeenInfoModal()) {
-      setTimeout(openInfoModal, 180);
-    }
+    scheduleInitialInfoModal();
 
     saveButton.addEventListener("click", async () => {
       saveButton.disabled = true;
