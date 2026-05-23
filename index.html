@@ -545,6 +545,28 @@
       outline-offset: 2px;
     }
 
+    .info-start-button {
+      border: 0;
+      border-radius: 999px;
+      min-height: 44px;
+      width: 100%;
+      margin-top: 2px;
+      padding: 0 18px;
+      font-family: inherit;
+      background: linear-gradient(135deg, #0b6edc 0%, #0fa7a0 100%);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 900;
+      box-shadow: 0 10px 22px rgba(11, 110, 220, 0.22);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .info-start-button:focus-visible {
+      outline: 3px solid rgba(13, 84, 196, 0.26);
+      outline-offset: 3px;
+    }
+
 
 
     @media (max-width: 520px) {
@@ -723,6 +745,8 @@
           <li>상품: 천문대 굿즈(장마철 필수템 우산 + 스트링백)</li>
         </ol>
       </div>
+
+      <button class="info-start-button" type="button" data-close-info-modal>확인하고 시작하기</button>
     </section>
   </div>
 
@@ -765,6 +789,7 @@
     let latestSaveBlob = null;
     let latestSaveFile = null;
     let activeHistoryModal = null;
+    let gestureRefreshedModal = "";
     let textDraftTimer = 0;
     const photoPosition = {
       x: 0,
@@ -841,6 +866,7 @@
 
       const modalHash = getModalHash(modalName);
       activeHistoryModal = modalName;
+      gestureRefreshedModal = "";
 
       try {
         if (window.location.hash !== `#${modalHash}`) {
@@ -855,6 +881,23 @@
           console.warn("Modal history setup failed.", historyError);
           activeHistoryModal = null;
         }
+      }
+    }
+
+    function refreshModalHistoryFromGesture() {
+      const modalName = !saveModal.hidden ? "save" : (!infoModal.hidden ? "info" : "");
+
+      if (!modalName || gestureRefreshedModal === modalName) {
+        return;
+      }
+
+      try {
+        history.replaceState({ venusJupiterBase: true }, "", getHistoryUrl(""));
+        history.pushState({ venusJupiterModal: modalName }, "", getHistoryUrl(modalName));
+        activeHistoryModal = modalName;
+        gestureRefreshedModal = modalName;
+      } catch (error) {
+        console.warn("Gesture history refresh failed.", error);
       }
     }
 
@@ -873,11 +916,13 @@
 
       if (options.fromHistory) {
         activeHistoryModal = null;
+        gestureRefreshedModal = "";
         return;
       }
 
       if (wasOpen && activeHistoryModal === "info") {
         activeHistoryModal = null;
+        gestureRefreshedModal = "";
         history.back();
       }
     }
@@ -896,11 +941,13 @@
 
       if (options.fromHistory) {
         activeHistoryModal = null;
+        gestureRefreshedModal = "";
         return;
       }
 
       if (wasOpen && activeHistoryModal === "save") {
         activeHistoryModal = null;
+        gestureRefreshedModal = "";
         history.back();
       }
     }
@@ -1124,6 +1171,10 @@
       } catch (error) {
         console.warn("Text draft restore failed.", error);
       }
+    }
+
+    function hasTextDraftValue() {
+      return textDraftFields.some((field) => field.value.trim());
     }
 
     function setPhotoSource(src, options = {}) {
@@ -1404,6 +1455,10 @@
 
     helpButton.addEventListener("click", openInfoModal);
 
+    ["pointerdown", "touchstart", "mousedown"].forEach((eventName) => {
+      document.addEventListener(eventName, refreshModalHistoryFromGesture, { capture: true });
+    });
+
     copyHashtagsButton.addEventListener("click", async () => {
       try {
         await copyTextToClipboard(hashtagText);
@@ -1467,6 +1522,15 @@
 
     window.addEventListener("popstate", handleHistoryModalChange);
     window.addEventListener("hashchange", () => handleHistoryModalChange({ state: history.state }));
+
+    window.addEventListener("beforeunload", (event) => {
+      saveTextDraft();
+
+      if (!infoModal.hidden || !saveModal.hidden || hasTextDraftValue()) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    });
 
     initializeHistoryGuard();
 
