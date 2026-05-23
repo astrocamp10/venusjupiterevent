@@ -143,7 +143,7 @@
       left: 3.92%;
       top: 30.95%;
       width: 92.24%;
-      height: 30.35%;
+      height: 31.38%;
       border-radius: clamp(8px, 1.8cqw, 18px);
       overflow: hidden;
     }
@@ -306,14 +306,16 @@
     .actions {
       width: min(800px, 100%);
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 8px 10px;
       padding-bottom: max(0px, env(safe-area-inset-bottom));
     }
 
     .save-note {
+      flex: 0 0 100%;
       margin: 0;
       color: #44516b;
       font-size: clamp(12px, 3.2vw, 14px);
@@ -325,8 +327,8 @@
       border: 0;
       border-radius: 999px;
       min-height: 52px;
-      min-width: min(280px, 84vw);
-      padding: 0 30px;
+      min-width: clamp(188px, 44vw, 280px);
+      padding: 0 24px;
       font-family: inherit;
       font-size: clamp(17px, 4.4vw, 21px);
       font-weight: 800;
@@ -363,7 +365,7 @@
     .help-button {
       border: 1px solid rgba(13, 84, 196, 0.28);
       border-radius: 999px;
-      min-height: 42px;
+      min-height: 48px;
       padding: 0 18px;
       font-family: inherit;
       font-size: clamp(14px, 3.6vw, 16px);
@@ -373,6 +375,7 @@
       box-shadow: 0 8px 18px rgba(13, 84, 196, 0.12);
       cursor: pointer;
       touch-action: manipulation;
+      white-space: nowrap;
     }
 
     .help-button:focus-visible {
@@ -704,9 +707,9 @@
     </section>
 
     <div class="actions">
+      <button class="help-button" id="helpButton" type="button">사용 안내 보기</button>
       <button class="save-button" id="saveButton" type="button">저장하기</button>
       <p class="save-note">이미지를 만드는 데 시간이 조금 걸릴 수 있습니다.</p>
-      <button class="help-button" id="helpButton" type="button">사용 안내 보기</button>
     </div>
   </main>
 
@@ -1257,9 +1260,9 @@
     }
 
     function getPhotoLayout(frameWidth, frameHeight, sourceWidth, sourceHeight, zoom, panX, panY) {
-      const containScale = Math.min(frameWidth / sourceWidth, frameHeight / sourceHeight);
-      const drawWidth = sourceWidth * containScale * zoom;
-      const drawHeight = sourceHeight * containScale * zoom;
+      const coverScale = Math.max(frameWidth / sourceWidth, frameHeight / sourceHeight);
+      const drawWidth = sourceWidth * coverScale * zoom;
+      const drawHeight = sourceHeight * coverScale * zoom;
       const maxOffsetX = Math.max(0, (drawWidth - frameWidth) / 2);
       const maxOffsetY = Math.max(0, (drawHeight - frameHeight) / 2);
       const offsetX = clampNumber(panX, -1, 1) * maxOffsetX;
@@ -1367,15 +1370,15 @@
         ctx.beginPath();
 
         if (ctx.roundRect) {
-          ctx.roundRect(44, 434, 1035, 426, 16);
+          ctx.roundRect(44, 434, 1035, 440, 16);
         } else {
-          ctx.rect(44, 434, 1035, 426);
+          ctx.rect(44, 434, 1035, 440);
         }
 
         ctx.clip();
         ctx.fillStyle = "#fff";
-        ctx.fillRect(44, 434, 1035, 426);
-        drawPhotoImage(ctx, photo, 44, 434, 1035, 426);
+        ctx.fillRect(44, 434, 1035, 440);
+        drawPhotoImage(ctx, photo, 44, 434, 1035, 440);
         ctx.restore();
       }
 
