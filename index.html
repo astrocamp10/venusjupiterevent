@@ -330,6 +330,26 @@
       transform: none;
     }
 
+    .help-button {
+      border: 1px solid rgba(13, 84, 196, 0.28);
+      border-radius: 999px;
+      min-height: 42px;
+      padding: 0 18px;
+      font-family: inherit;
+      font-size: clamp(14px, 3.6vw, 16px);
+      font-weight: 800;
+      color: #0b2d73;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 8px 18px rgba(13, 84, 196, 0.12);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .help-button:focus-visible {
+      outline: 3px solid rgba(13, 84, 196, 0.26);
+      outline-offset: 3px;
+    }
+
     .save-modal[hidden] {
       display: none;
     }
@@ -409,6 +429,77 @@
       font-size: 22px;
       line-height: 1;
       cursor: pointer;
+    }
+
+    .info-panel {
+      width: min(620px, 100%);
+      max-height: min(88dvh, 780px);
+      gap: 16px;
+      padding: 22px;
+      overflow: auto;
+    }
+
+    .info-panel h2 {
+      padding-right: 36px;
+      font-size: clamp(20px, 5vw, 25px);
+    }
+
+    .info-lead {
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #f0f7ff;
+      color: #153460;
+      font-weight: 700;
+    }
+
+    .info-section {
+      padding-top: 14px;
+      border-top: 1px solid #e4ecf7;
+    }
+
+    .info-section h3 {
+      margin: 0 0 8px;
+      color: #0b2d73;
+      font-size: 16px;
+      line-height: 1.35;
+    }
+
+    .info-list {
+      margin: 0;
+      padding-left: 20px;
+      color: #26324d;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .info-list li + li {
+      margin-top: 5px;
+    }
+
+    .kakao-note {
+      padding: 12px 14px;
+      border: 1px solid rgba(248, 164, 40, 0.55);
+      border-radius: 10px;
+      background: #fff7df;
+      color: #5f3c00;
+      font-weight: 800;
+      line-height: 1.55;
+    }
+
+    .hashtag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .hashtag {
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #0b2d73;
+      font-size: 13px;
+      font-weight: 800;
     }
 
 
@@ -524,8 +615,64 @@
     <div class="actions">
       <button class="save-button" id="saveButton" type="button">저장하기</button>
       <p class="save-note">이미지를 만드는 데 시간이 조금 걸릴 수 있습니다.</p>
+      <button class="help-button" id="helpButton" type="button">사용 안내 보기</button>
     </div>
   </main>
+
+  <div class="save-modal info-modal" id="infoModal" hidden>
+    <div class="save-modal-backdrop" data-close-info-modal></div>
+    <section class="save-panel info-panel" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+      <button class="save-modal-close" type="button" data-close-info-modal aria-label="닫기">×</button>
+      <h2 id="infoModalTitle">홈페이지 사용 안내</h2>
+      <p class="info-lead">금성과 목성 근접 관측 사진과 글짓기 내용을 한 장의 PNG 이미지로 저장하는 페이지입니다.</p>
+
+      <div class="info-section">
+        <h3>작성 방법</h3>
+        <ol class="info-list">
+          <li>관측 날짜, 관측 시간, 관측 장소와 관찰 메모 3가지를 각각 입력합니다.</li>
+          <li>사진 칸을 클릭하거나 휴대폰에서 터치해 금성과 목성 사진을 첨부합니다.</li>
+          <li>사진 첨부 후 나타나는 슬라이더로 사진 크기를 조절하고, 확대한 상태에서는 사진을 드래그해 위치를 맞춥니다.</li>
+          <li>저장하기 버튼을 누르면 작성한 글, 사진, 로고가 포함된 이미지가 저장됩니다.</li>
+        </ol>
+      </div>
+
+      <div class="info-section">
+        <h3>저장 안내</h3>
+        <p class="kakao-note">카카오톡 브라우저에서는 브라우저 정책상 자동 저장이 제한될 수 있습니다. 카카오톡에서 저장 화면이 뜨면 이미지를 꾹 눌러 저장해 주세요.</p>
+        <ol class="info-list">
+          <li>크롬, 삼성 브라우저, 사파리에서는 저장하기 버튼으로 PNG 저장이 가능합니다.</li>
+          <li>이미지를 만드는 데 시간이 조금 걸릴 수 있으니 저장 중에는 잠시 기다려 주세요.</li>
+        </ol>
+      </div>
+
+      <div class="info-section">
+        <h3>이벤트 안내</h3>
+        <ol class="info-list">
+          <li>이벤트명: 2026 금성 목성 근접 촬영 이벤트</li>
+          <li>참가 대상: 정규대원</li>
+          <li>행성 촬영 기간: 6월 6일 ~ 11일</li>
+          <li>글짓기 제출 기한: 6월 30일까지</li>
+          <li>글짓기 제목 예시: 경!(찰과) 도!(둑), 경찰(목성)과 도둑(금성), 금성과 목성 근접 관측</li>
+        </ol>
+      </div>
+
+      <div class="info-section">
+        <h3>참여 방법</h3>
+        <ol class="info-list">
+          <li>목성과 금성의 근접 현상을 촬영하고 글짓기를 작성합니다.</li>
+          <li>글짓기에 "인천어린이천문대 00반 대원"을 적어 인스타그램에 업로드합니다.</li>
+          <li>업로드 후 천문대 DM으로 학생 정보(반, 이름)를 전달합니다. 구분이 어려우면 번호 뒷자리까지 함께 보내 주세요.</li>
+          <li>상품: 천문대 굿즈(장마철 필수템 우산 + 스트링백)</li>
+        </ol>
+        <div class="hashtag-row" aria-label="필수 해시태그">
+          <span class="hashtag">#금성</span>
+          <span class="hashtag">#목성</span>
+          <span class="hashtag">#인천어린이천문대</span>
+          <span class="hashtag">#2026금성목성</span>
+        </div>
+      </div>
+    </section>
+  </div>
 
   <div class="save-modal" id="saveModal" hidden>
     <div class="save-modal-backdrop" data-close-save-modal></div>
@@ -551,9 +698,12 @@
     const previewImage = document.getElementById("previewImage");
     const photoZoom = document.getElementById("photoZoom");
     const saveButton = document.getElementById("saveButton");
+    const helpButton = document.getElementById("helpButton");
+    const infoModal = document.getElementById("infoModal");
     const saveModal = document.getElementById("saveModal");
     const savePreview = document.getElementById("savePreview");
     const saveFilename = "금성목성_관측기록.png";
+    const infoModalSeenKey = "venusJupiterInfoSeen";
     let latestSaveUrl = "";
     let latestSaveDataUrl = "";
     let latestSaveBlob = null;
@@ -590,6 +740,31 @@
 
     function isKakaoTalkBrowser() {
       return /KAKAOTALK/i.test(navigator.userAgent);
+    }
+
+    function hasSeenInfoModal() {
+      try {
+        return sessionStorage.getItem(infoModalSeenKey) === "1";
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function rememberInfoModalSeen() {
+      try {
+        sessionStorage.setItem(infoModalSeenKey, "1");
+      } catch (error) {
+        // Storage can be unavailable in some in-app browsers.
+      }
+    }
+
+    function openInfoModal() {
+      infoModal.hidden = false;
+      rememberInfoModalSeen();
+    }
+
+    function closeInfoModal() {
+      infoModal.hidden = true;
     }
 
     function triggerDownload(url, filename, revokeUrl) {
@@ -945,6 +1120,30 @@
         saveModal.hidden = true;
       });
     });
+
+    document.querySelectorAll("[data-close-info-modal]").forEach((button) => {
+      button.addEventListener("click", closeInfoModal);
+    });
+
+    helpButton.addEventListener("click", openInfoModal);
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      if (!infoModal.hidden) {
+        closeInfoModal();
+      }
+
+      if (!saveModal.hidden) {
+        saveModal.hidden = true;
+      }
+    });
+
+    if (!hasSeenInfoModal()) {
+      setTimeout(openInfoModal, 180);
+    }
 
     saveButton.addEventListener("click", async () => {
       saveButton.disabled = true;
