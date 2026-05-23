@@ -816,13 +816,31 @@
       }
     }
 
+    function getModalHash(modalName) {
+      return modalName === "save" ? "save-image" : "guide";
+    }
+
+    function getHistoryUrl(modalName) {
+      const url = new URL(window.location.href);
+      url.hash = modalName ? getModalHash(modalName) : "";
+      return url.href;
+    }
+
+    function initializeHistoryGuard() {
+      try {
+        history.replaceState({ venusJupiterBase: true }, "", getHistoryUrl(""));
+      } catch (error) {
+        console.warn("History guard setup failed.", error);
+      }
+    }
+
     function pushModalHistory(modalName) {
       if (activeHistoryModal === modalName) {
         return;
       }
 
       try {
-        history.pushState({ venusJupiterModal: modalName }, "", window.location.href);
+        history.pushState({ venusJupiterModal: modalName }, "", getHistoryUrl(modalName));
         activeHistoryModal = modalName;
       } catch (error) {
         activeHistoryModal = null;
@@ -853,9 +871,12 @@
       }
     }
 
-    function openSaveModal() {
+    function openSaveModal(options = {}) {
       saveModal.hidden = false;
-      pushModalHistory("save");
+
+      if (!options.fromHistory) {
+        pushModalHistory("save");
+      }
     }
 
     function closeSaveModal(options = {}) {
@@ -1396,7 +1417,21 @@
       }
     });
 
-    window.addEventListener("popstate", () => {
+    function handleHistoryModalChange(event) {
+      const modalName = event && event.state ? event.state.venusJupiterModal : "";
+
+      if (modalName === "info") {
+        activeHistoryModal = "info";
+        openInfoModal({ fromHistory: true });
+        return;
+      }
+
+      if (modalName === "save") {
+        activeHistoryModal = "save";
+        openSaveModal({ fromHistory: true });
+        return;
+      }
+
       if (!saveModal.hidden) {
         closeSaveModal({ fromHistory: true });
         return;
@@ -1405,7 +1440,19 @@
       if (!infoModal.hidden) {
         closeInfoModal({ fromHistory: true });
       }
+    }
+
+    window.addEventListener("popstate", handleHistoryModalChange);
+
+    window.addEventListener("hashchange", () => {
+      if (window.location.hash === "#guide" || window.location.hash === "#save-image") {
+        return;
+      }
+
+      handleHistoryModalChange({ state: history.state });
     });
+
+    initializeHistoryGuard();
 
     if (!hasSeenInfoModal()) {
       setTimeout(openInfoModal, 180);
