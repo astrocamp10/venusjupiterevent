@@ -600,6 +600,35 @@
       display: none;
     }
 
+    .info-scroll-hint {
+      position: fixed;
+      left: 50%;
+      bottom: calc(6dvh + env(safe-area-inset-bottom));
+      z-index: 60;
+      transform: translate(-50%, 8px);
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(74, 80, 92, 0.94);
+      color: #fff;
+      font-size: clamp(13px, 3.4vw, 15px);
+      font-weight: 900;
+      line-height: 1.2;
+      box-shadow: 0 12px 28px rgba(9, 22, 46, 0.24);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.16s ease, transform 0.16s ease;
+    }
+
+    .info-scroll-hint.is-visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .info-scroll-hint[hidden],
+    .info-modal:not(.is-start-mode) .info-scroll-hint {
+      display: none;
+    }
+
 
 
     @media (max-width: 520px) {
@@ -775,6 +804,7 @@
 
       <button class="info-start-button" type="button" data-close-info-modal>확인하고 시작하기</button>
     </section>
+    <div class="info-scroll-hint" id="infoScrollHint" hidden>아래로 스크롤해 주세요 ↓</div>
   </div>
 
   <div class="save-modal" id="saveModal" hidden>
@@ -803,6 +833,8 @@
     const saveButton = document.getElementById("saveButton");
     const helpButton = document.getElementById("helpButton");
     const infoModal = document.getElementById("infoModal");
+    const infoPanel = infoModal.querySelector(".info-panel");
+    const infoScrollHint = document.getElementById("infoScrollHint");
     const copyHashtagsButton = document.getElementById("copyHashtagsButton");
     const saveModal = document.getElementById("saveModal");
     const savePreview = document.getElementById("savePreview");
@@ -818,6 +850,7 @@
     let activeHistoryModal = null;
     let gestureRefreshedModal = "";
     let textDraftTimer = 0;
+    let infoScrollHintTimer = 0;
     const photoPosition = {
       x: 0,
       y: 0
@@ -919,6 +952,39 @@
       return infoModal.dataset.mode === "start" ? "start" : "info";
     }
 
+    function hideInfoScrollHint() {
+      if (!infoScrollHint) {
+        return;
+      }
+
+      infoScrollHint.classList.remove("is-visible");
+      window.clearTimeout(infoScrollHintTimer);
+      infoScrollHintTimer = window.setTimeout(() => {
+        infoScrollHint.hidden = true;
+      }, 180);
+    }
+
+    function showInfoScrollHintIfNeeded(mode) {
+      if (!infoScrollHint || mode !== "start") {
+        hideInfoScrollHint();
+        return;
+      }
+
+      window.clearTimeout(infoScrollHintTimer);
+      infoScrollHint.hidden = false;
+      infoScrollHint.classList.remove("is-visible");
+
+      requestAnimationFrame(() => {
+        const canScroll = infoPanel.scrollHeight > infoPanel.clientHeight + 8;
+
+        if (!infoModal.hidden && getCurrentInfoModalName() === "start" && canScroll) {
+          infoScrollHint.classList.add("is-visible");
+        } else {
+          infoScrollHint.hidden = true;
+        }
+      });
+    }
+
     function refreshModalHistoryFromGesture() {
       const modalName = !saveModal.hidden ? "save" : (!infoModal.hidden ? getCurrentInfoModalName() : "");
 
@@ -941,6 +1007,8 @@
       infoModal.dataset.mode = mode;
       infoModal.classList.toggle("is-start-mode", mode === "start");
       infoModal.hidden = false;
+      infoPanel.scrollTop = 0;
+      showInfoScrollHintIfNeeded(mode);
       rememberInfoModalSeen();
 
       if (!options.fromHistory) {
@@ -950,6 +1018,7 @@
 
     function closeInfoModal(options = {}) {
       const wasOpen = !infoModal.hidden;
+      hideInfoScrollHint();
       infoModal.hidden = true;
 
       if (options.fromHistory) {
@@ -1557,6 +1626,16 @@
     });
 
     restoreTextDraft();
+
+    infoPanel.addEventListener("scroll", () => {
+      if (infoPanel.scrollTop > 4) {
+        hideInfoScrollHint();
+      }
+    }, { passive: true });
+
+    ["wheel", "touchmove"].forEach((eventName) => {
+      infoPanel.addEventListener(eventName, hideInfoScrollHint, { passive: true });
+    });
 
     document.querySelectorAll("[data-close-save-modal]").forEach((button) => {
       button.addEventListener("click", () => closeSaveModal());
