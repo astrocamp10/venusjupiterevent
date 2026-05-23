@@ -670,7 +670,7 @@
       </div>
       <div class="photo-tools" data-html2canvas-ignore="true">
         <span class="zoom-mark">+</span>
-        <input class="zoom-slider" id="photoZoom" type="range" min="1" max="3" step="0.01" value="1" aria-label="사진 확대 비율" />
+        <input class="zoom-slider" id="photoZoom" type="range" min="1" max="5" step="0.01" value="1" aria-label="사진 확대 비율" />
         <span class="zoom-mark">-</span>
       </div>
 
@@ -1260,9 +1260,9 @@
     }
 
     function getPhotoLayout(frameWidth, frameHeight, sourceWidth, sourceHeight, zoom, panX, panY) {
-      const coverScale = Math.max(frameWidth / sourceWidth, frameHeight / sourceHeight);
-      const drawWidth = sourceWidth * coverScale * zoom;
-      const drawHeight = sourceHeight * coverScale * zoom;
+      const containScale = Math.min(frameWidth / sourceWidth, frameHeight / sourceHeight);
+      const drawWidth = sourceWidth * containScale * zoom;
+      const drawHeight = sourceHeight * containScale * zoom;
       const maxOffsetX = Math.max(0, (drawWidth - frameWidth) / 2);
       const maxOffsetY = Math.max(0, (drawHeight - frameHeight) / 2);
       const offsetX = clampNumber(panX, -1, 1) * maxOffsetX;
@@ -1487,7 +1487,7 @@
         }
 
         const min = Number(photoZoom.min || 1);
-        const max = Number(photoZoom.max || 3);
+        const max = Number(photoZoom.max || 5);
         const step = Number(photoZoom.step || 0);
         const ratio = clampNumber((rect.bottom - clientY) / rect.height, 0, 1);
         let nextValue = min + (max - min) * ratio;
