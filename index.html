@@ -112,6 +112,19 @@
       word-break: keep-all;
     }
 
+    .memo-divider {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--w);
+      height: clamp(1.5px, 0.28cqw, 3px);
+      border-radius: 999px;
+      background: rgba(244, 132, 32, 0.9);
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.75);
+      pointer-events: none;
+      z-index: 2;
+    }
+
     .capture-field::placeholder {
       color: rgba(55, 63, 82, 0.58);
       opacity: 1;
@@ -744,6 +757,10 @@
         <input class="zoom-slider" id="photoZoom" type="range" min="1" max="5" step="0.01" value="1" aria-label="사진 확대 비율" />
         <span class="zoom-mark">-</span>
       </div>
+
+      <div class="memo-divider" aria-hidden="true" style="--x: 5.1%; --y: 71.95%; --w: 26.0%;"></div>
+      <div class="memo-divider" aria-hidden="true" style="--x: 35.5%; --y: 71.95%; --w: 28.0%;"></div>
+      <div class="memo-divider" aria-hidden="true" style="--x: 66.9%; --y: 71.95%; --w: 26.5%;"></div>
 
       <label class="sr-only" for="skyColor">하늘은 어떤 색이었나요?</label>
       <textarea
@@ -1465,6 +1482,28 @@
       });
     }
 
+    function drawMemoDividers(ctx) {
+      const dividers = [
+        { x: 57, y: 1009, width: 292 },
+        { x: 398, y: 1009, width: 314 },
+        { x: 751, y: 1009, width: 297 }
+      ];
+
+      ctx.save();
+      ctx.strokeStyle = "rgba(244, 132, 32, 0.9)";
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+
+      dividers.forEach((divider) => {
+        ctx.beginPath();
+        ctx.moveTo(divider.x, divider.y);
+        ctx.lineTo(divider.x + divider.width, divider.y);
+        ctx.stroke();
+      });
+
+      ctx.restore();
+    }
+
     async function renderFallbackCanvas() {
       const canvas = document.createElement("canvas");
       canvas.width = 1122;
@@ -1498,6 +1537,8 @@
       ctx.fillText(obsDate.value, 151, 368);
       ctx.fillText(obsTime.value, 502, 368);
       ctx.fillText(obsPlace.value, 833, 368);
+
+      drawMemoDividers(ctx);
 
       ctx.textBaseline = "top";
       ctx.font = "600 22px 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif";
